@@ -1,4 +1,5 @@
 <script>
+    import { onMount } from "svelte";
     import page from "../transitions/page.js";
     import PageHeader from "../common/PageHeader.svelte";
     import Multiselect from "../common/Multiselect.svelte";
@@ -7,11 +8,6 @@
     import {platforms as platformLabels, validatePath, getBrowsePath} from "../actions/paths";
     import {remote} from "electron";
     import getStatic from "../getstatic";
-
-    if (Object.values($platforms).some(r => r)) canGoForward.set(true);
-    else canGoForward.set(false);
-    canGoBack.set(true);
-    nextPage.set(`/${$action}`);
 
     function updateInstallButtonState() {
         if (Object.values($platforms).some(r => r)) canGoForward.set(true);
@@ -46,6 +42,25 @@
         });
         updateInstallButtonState();
     }
+
+    // Preselect option if only one available
+    onMount(() => {
+        const availablePlatforms = Object.entries($platforms).filter(([_, isAvailable]) => isAvailable);
+
+        if (availablePlatforms.length === 1) {
+            const [singlePlatform] = availablePlatforms;
+            platforms.update(obj => {
+                obj[singlePlatform[0]] = true;
+                return obj;
+            });
+            updateInstallButtonState();
+        }
+    });
+
+    if (Object.values($platforms).some(r => r)) canGoForward.set(true);
+    else canGoForward.set(false);
+    canGoBack.set(true);
+    nextPage.set(/${$action});
 </script>
 
 <section class="page" in:page out:page="{{out: true}}">
